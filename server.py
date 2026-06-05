@@ -72,4 +72,5 @@ if __name__ == "__main__":
         print(f"\n✓  FRED API Key 已加载（{API_KEY[:6]}...）")
     print("✓  本地代理启动中：http://localhost:5100")
     print("   用浏览器打开 index.html 即可使用\n")
-    app.run(host="127.0.0.1", port=5100, debug=False)
+    port = int(os.environ.get("PORT", 5100))
+    app.run(host="0.0.0.0", port=port, debug=False)
