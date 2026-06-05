@@ -188,8 +188,9 @@
 </div>
 
 <script>
-const LOCAL = 'http://localhost:5100';
-
+const LOCAL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://localhost:5100'
+  : 'https://xxx.onrender.com'; 
 function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
 
 function colorFor(score) {
