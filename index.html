@@ -344,9 +344,9 @@ async function loadData() {
     scores.usd = s;
   } catch { setRow('usd','—',40,'获取失败'); scores.usd=40; }
 
-  // GOLDAMGBD228NLBM — 伦敦金午盘定价（USD/盎司），取60条看趋势
+  // GOLDPMGBD228NLBM — 伦敦金午盘定价（USD/盎司），取60条看趋势
   try {
-    const d   = await fred('GOLDAMGBD228NLBM', 60);
+    const d   = await fred('GOLDPMGBD228NLBM', 60);
     const cur  = parseFloat(d[0].value);
     const old  = parseFloat(d[d.length-1].value);
     const chg  = ((cur-old)/old)*100;
