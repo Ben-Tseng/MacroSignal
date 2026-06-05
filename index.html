@@ -143,7 +143,7 @@
         <div class="layer-card"><div class="layer-name">货币层</div><div class="layer-val" id="l2-s" style="color:#888780;">—</div><div class="layer-st" id="l2-t" style="color:#888780;">载入中</div></div>
         <div class="layer-card"><div class="layer-name">结构层</div><div class="layer-val" id="l1-s" style="color:#888780;">—</div><div class="layer-st" id="l1-t" style="color:#888780;">载入中</div></div>
         <div class="layer-card"><div class="layer-name">市场层</div><div class="layer-val" id="l3-s" style="color:#888780;">—</div><div class="layer-st" id="l3-t" style="color:#888780;">载入中</div></div>
-        <div class="layer-card"><div class="layer-name">地缘层</div><div class="layer-val" id="l4-s" style="color:#888780;">38</div><div class="layer-st" id="l4-t" style="color:#888780;">手动评估</div></div>
+        <div class="layer-card"><div class="layer-name">地缘层</div><div class="layer-val" id="l4-s" style="color:#b4b2a9;">—</div><div class="layer-st" id="l4-t" style="color:#b4b2a9;">未纳入计算</div></div>
       </div>
     </div>
 
@@ -191,6 +191,17 @@
     <div class="update-row">
       <span id="last-updated">上次更新：—</span>
       <button class="btn" id="refresh-btn" onclick="loadData()">↻ 刷新数据</button>
+    </div>
+
+    <div style="background:#F1EFE8;border:0.5px solid #D3D1C7;border-radius:12px;padding:1rem 1.5rem;margin-top:1rem;margin-bottom:0.5rem;">
+      <div style="font-size:12px;font-weight:500;color:#5F5E5A;margin-bottom:8px;">第四层：地缘政治触发指标（黑天鹅预警）— 未纳入自动计算</div>
+      <div style="font-size:12px;color:#888780;line-height:1.8;">
+        以下指标缺乏可靠的实时公开数据源，目前需手动跟踪：<br>
+        · <b>中国减持美债速度</b>：美国财政部TIC数据，每月更新，延迟约2个月<br>
+        · <b>人民币国际结算份额</b>：SWIFT月报，PDF格式，无结构化API<br>
+        · <b>石油非美元结算比例</b>：无公开实时数据源，依赖新闻追踪<br>
+        · <b>国债拍卖认购倍数</b>：已移入市场层，通过财政部API自动拉取
+      </div>
     </div>
     <div class="source-row">数据来源：<a href="https://fred.stlouisfed.org" target="_blank">FRED · 美联储圣路易斯分行</a> · 通过本地 server.py 代理访问，API Key保存在你的本地环境变量中，不会离开本机。</div>
 
@@ -407,17 +418,18 @@ async function loadData() {
     scores.btc = s;
   } catch { setRow('btc','—',45,'获取失败'); scores.btc=45; }
 
-  // 汇总各层 — 市场层现在有三个真实独立指标
+  // 汇总各层
+  // 权重：货币层40% + 结构层35% + 市场层25%
+  // 地缘层已从计算中移除（无可靠实时数据源），保留为手动注释
   const l2 = Math.round(scores.t5yie*0.35 + scores.t10yie*0.25 + scores.dfii10*0.25 + scores.walcl*0.15);
   const l1 = Math.round(scores.m2yoy*0.35 + scores.deficit*0.40 + scores.usd*0.25);
   const l3 = Math.round(scores.gold*0.40 + scores.hyspread*0.30 + scores.btc*0.30);
-  const l4 = 38;
 
   setLayer('l2', l2, l2<35?'货币可控':l2<60?'需关注':'货币压力大');
   setLayer('l1', l1, l1<35?'结构稳定':l1<60?'压力累积':'结构恶化');
   setLayer('l3', l3, l3<35?'市场平稳':l3<60?'预期抬升':'市场预警');
 
-  const total = Math.round(l2*0.35 + l1*0.35 + l3*0.20 + l4*0.10);
+  const total = Math.round(l2*0.40 + l1*0.35 + l3*0.25);
   const tc = colorFor(total);
   const ts = document.getElementById('total-score');
   ts.textContent = total; ts.style.color = tc.hex;
