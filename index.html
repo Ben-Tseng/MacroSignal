@@ -155,6 +155,13 @@
       <div class="ind-row" id="row-walcl"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">美联储总资产（资产负债表）</div><div class="ind-meta">扩表 = 核心红线信号 · 每周</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-walcl" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-walcl"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-walcl">—</span></div>
     </div>
 
+    <div class="section-label">市场层 — 实时对冲信号</div>
+    <div class="indicators">
+      <div class="ind-row" id="row-gold"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">黄金价格（伦敦金午盘定价）</div><div class="ind-meta">强势美元期间仍涨 = 对冲美元体系风险 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-gold" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-gold"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-gold">—</span></div>
+      <div class="ind-row" id="row-hyspread"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">高收益债信用利差（HY Spread）</div><div class="ind-meta">利差走阔 = 企业偿债能力恶化 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-hyspread" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-hyspread"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-hyspread">—</span></div>
+      <div class="ind-row" id="row-btc"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">10年期国债拍卖认购倍数（Bid-to-Cover）</div><div class="ind-meta">警戒线 &lt;2.0 · 来源：美国财政部 · 每月约两次</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-btc" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-btc"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-btc">—</span></div>
+    </div>
+
     <div class="section-label">结构层指标</div>
     <div class="indicators">
       <div class="ind-row" id="row-m2yoy"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">M2货币供应量同比增速</div><div class="ind-meta">正常 3–5% · 警戒线 8% · 每月</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-m2yoy" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-m2yoy"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-m2yoy">—</span></div>
@@ -175,6 +182,9 @@
         <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>TIPS 5yr &gt;3%</div>
         <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>实际利率为负</div>
         <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>M2同比 &gt;8%</div>
+        <div class="th-item"><div class="mini-dot" style="background:#BA7517;"></div>黄金60期涨幅 &gt;15%</div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>HY利差 &gt;6%</div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>国债认购倍数 &lt;2.0x</div>
       </div>
     </div>
 
@@ -188,7 +198,8 @@
 </div>
 
 <script>
-const LOCAL = 'https://macrosignal-bfqt.onrender.com';
+const LOCAL = 'http://localhost:5100';
+
 function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
 
 function colorFor(score) {
@@ -333,10 +344,71 @@ async function loadData() {
     scores.usd = s;
   } catch { setRow('usd','—',40,'获取失败'); scores.usd=40; }
 
-  // 汇总各层
+  // GOLDAMGBD228NLBM — 伦敦金午盘定价（USD/盎司），取60条看趋势
+  try {
+    const d   = await fred('GOLDAMGBD228NLBM', 60);
+    const cur  = parseFloat(d[0].value);
+    const old  = parseFloat(d[d.length-1].value);
+    const chg  = ((cur-old)/old)*100;
+    // 黄金上涨是对冲信号，涨幅越大风险越高
+    const s    = chg<0?15 : chg<5?30 : chg<15?55 : chg<25?72 : 88;
+    const lbl  = chg<0?'黄金回落' : chg<5?'温和上涨' : chg<15?'明显上涨⚠' : '强势上涨⚠';
+    setRow('gold', '$'+Math.round(cur).toLocaleString(), s, lbl);
+    scores.gold = s;
+  } catch { setRow('gold','—',40,'获取失败'); scores.gold=40; }
+
+  // BAMLH0A0HYM2 — 美银美林高收益债利差（%），取60条
+  try {
+    const d  = await fred('BAMLH0A0HYM2', 60);
+    const cur = parseFloat(d[0].value);
+    const s   = cur<3?15 : cur<4?28 : cur<5?50 : cur<7?70 : 88;
+    const lbl = cur<4?'利差正常' : cur<5?'利差偏高' : cur<7?'利差预警⚠' : '利差危险⚠';
+    setRow('hyspread', cur.toFixed(2)+'%', s, lbl);
+    scores.hyspread = s;
+  } catch { setRow('hyspread','—',40,'获取失败'); scores.hyspread=40; }
+
+  // 国债拍卖认购倍数 — 来自财政部API
+  try {
+    const res = await fetch(`${LOCAL}/treasury/btc?limit=6`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const arr = await res.json();
+    if (arr.error) throw new Error(arr.error);
+
+    const latest = arr[0];
+    const btcVal = latest.btc;
+
+    // 计算近6场平均值，判断趋势
+    const avg = arr.reduce((sum, x) => sum + x.btc, 0) / arr.length;
+    const trend = btcVal - avg;
+
+    // 评分：认购倍数越低风险越高
+    // 正常区间 2.3–2.8，警戒线 2.0，危险线 1.8
+    const s = btcVal >= 2.5 ? 15
+            : btcVal >= 2.2 ? 30
+            : btcVal >= 2.0 ? 52
+            : btcVal >= 1.8 ? 72
+            : 88;
+
+    const trendStr = trend >= 0.05 ? '↑需求改善'
+                   : trend <= -0.05 ? '↓需求走弱⚠'
+                   : '→需求稳定';
+
+    const lbl = btcVal >= 2.3 ? '需求健康'
+              : btcVal >= 2.0 ? '需求偏弱'
+              : '需求预警⚠';
+
+    setRow('btc',
+      `${btcVal.toFixed(2)}x（均值${avg.toFixed(2)}x）`,
+      s,
+      lbl + ' ' + trendStr
+    );
+    scores.btc = s;
+  } catch { setRow('btc','—',45,'获取失败'); scores.btc=45; }
+
+  // 汇总各层 — 市场层现在有三个真实独立指标
   const l2 = Math.round(scores.t5yie*0.35 + scores.t10yie*0.25 + scores.dfii10*0.25 + scores.walcl*0.15);
   const l1 = Math.round(scores.m2yoy*0.35 + scores.deficit*0.40 + scores.usd*0.25);
-  const l3 = Math.round(scores.t5yie*0.50 + scores.t10yie*0.30 + scores.dfii10*0.20);
+  const l3 = Math.round(scores.gold*0.40 + scores.hyspread*0.30 + scores.btc*0.30);
   const l4 = 38;
 
   setLayer('l2', l2, l2<35?'货币可控':l2<60?'需关注':'货币压力大');
@@ -383,4 +455,4 @@ async function checkConnection() {
 checkConnection();
 </script>
 </body>
-</html> 
+</html>
