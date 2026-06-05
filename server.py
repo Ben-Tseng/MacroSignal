@@ -1,18 +1,19 @@
 """
 启动方式：
-  1. 安装依赖：pip install requests flask flask-cors
+  1. 安装依赖：pip install requests flask flask-cors yfinance
   2. 设置你的FRED API Key（只需做一次）：
        Mac/Linux:  export FRED_API_KEY=你的32位Key
        Windows:    set FRED_API_KEY=你的32位Key
   3. 启动服务：python server.py
   4. 用浏览器打开 index.html 即可
 
-服务会在本地 http://localhost:5100 运行，刷新网页时自动拉取最新FRED数据。
+服务会在本地 http://localhost:5100 运行，刷新网页时自动拉取最新数据。
 """
 
 import os
 from datetime import datetime, timedelta
 import requests
+import yfinance as yf
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -60,6 +61,40 @@ def fred_proxy():
         return jsonify({"error": "FRED API请求超时"}), 504
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 502
+
+
+@app.route("/gold")
+def gold_price():
+    """
+    拉取黄金期货近N个交易日收盘价。
+    数据来源：Yahoo Finance GC=F（黄金期货），无需API Key，每日更新。
+    返回格式：[{"date":"2025-06-01","value":"3280.5"}, ...]，按日期降序。
+    """
+    limit = int(request.args.get("limit", 60))
+
+    try:
+        ticker = yf.Ticker("GC=F")
+        # 拉取过去6个月数据，足够覆盖60个交易日
+        hist = ticker.history(period="6mo", interval="1d", auto_adjust=True)
+
+        if hist.empty:
+            return jsonify({"error": "Yahoo Finance返回空数据"}), 502
+
+        results = []
+        for date, row in hist.iterrows():
+            close = row["Close"]
+            if close and close > 0:
+                results.append({
+                    "date":  date.strftime("%Y-%m-%d"),
+                    "value": str(round(float(close), 2)),
+                })
+
+        # 按日期降序，取最近N条
+        results.sort(key=lambda x: x["date"], reverse=True)
+        return jsonify(results[:limit])
+
+    except Exception as e:
+        return jsonify({"error": f"黄金数据获取失败: {str(e)}"}), 502
 
 
 @app.route("/treasury/btc")
