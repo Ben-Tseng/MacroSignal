@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美国通胀风险监测仪表盘</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f4f0; color: #1a1a18; min-height: 100vh; }
+  .page { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #888780; margin-bottom: 1.5rem; }
+  .setup-box { background: #fff; border: 0.5px solid #d3d1c7; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  .setup-title { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+  .setup-step { font-size: 13px; color: #444441; line-height: 2; }
+  .setup-step code { background: #f1efe8; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+  .section-label { font-size: 11px; font-weight: 500; color: #888780; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; margin-top: 1.5rem; }
+  .alert { border-radius: 10px; padding: 14px 18px; margin-bottom: 1.5rem; border: 0.5px solid; }
+  .alert-green { background:#EAF3DE; border-color:#97C459; }
+  .alert-amber { background:#FAEEDA; border-color:#FAC775; }
+  .alert-red   { background:#FCEBEB; border-color:#F09595; }
+  .alert-gray  { background:#F1EFE8; border-color:#D3D1C7; }
+  .alert-title { font-size:15px; font-weight:500; margin-bottom:4px; }
+  .alert-green .alert-title { color:#27500A; }
+  .alert-amber .alert-title { color:#633806; }
+  .alert-red   .alert-title { color:#791F1F; }
+  .alert-gray  .alert-title { color:#444441; }
+  .alert-body  { font-size:13px; line-height:1.6; }
+  .alert-green .alert-body  { color:#3B6D11; }
+  .alert-amber .alert-body  { color:#854F0B; }
+  .alert-red   .alert-body  { color:#A32D2D; }
+  .alert-gray  .alert-body  { color:#5F5E5A; }
+  .score-row   { display:flex; align-items:center; gap:16px; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .score-big   { background:#fff; border:0.5px solid #d3d1c7; border-radius:12px; padding:1.25rem 1.5rem; text-align:center; min-width:160px; }
+  .score-num   { font-size:52px; font-weight:500; line-height:1; }
+  .score-lbl   { font-size:12px; color:#888780; margin-top:4px; }
+  .layer-scores { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; flex:1; }
+  .layer-card  { background:#fff; border:0.5px solid #d3d1c7; border-radius:10px; padding:12px 14px; }
+  .layer-name  { font-size:12px; color:#888780; margin-bottom:6px; }
+  .layer-val   { font-size:22px; font-weight:500; }
+  .layer-st    { font-size:11px; margin-top:3px; }
+  .indicators  { background:#fff; border:0.5px solid #d3d1c7; border-radius:12px; overflow:hidden; margin-bottom:1.5rem; }
+  .ind-row     { display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:0.5px solid #f1efe8; }
+  .ind-row:last-child { border-bottom:none; }
+  .dot         { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .dot-green   { background:#639922; }
+  .dot-amber   { background:#BA7517; }
+  .dot-red     { background:#E24B4A; }
+  .dot-gray    { background:#b4b2a9; }
+  .ind-info    { flex:1; }
+  .ind-name    { font-size:14px; }
+  .ind-meta    { font-size:12px; color:#888780; margin-top:2px; }
+  .bar-wrap    { width:100px; height:5px; background:#e8e6e0; border-radius:3px; overflow:hidden; flex-shrink:0; }
+  .bar-fill    { height:100%; border-radius:3px; transition:width 0.5s ease; }
+  .ind-val     { font-size:13px; font-weight:500; min-width:100px; text-align:right; color:#444441; }
+  .badge       { font-size:11px; font-weight:500; padding:3px 10px; border-radius:6px; white-space:nowrap; }
+  .badge-green { background:#EAF3DE; color:#27500A; }
+  .badge-amber { background:#FAEEDA; color:#633806; }
+  .badge-red   { background:#FCEBEB; color:#791F1F; }
+  .badge-gray  { background:#F1EFE8; color:#5F5E5A; }
+  .update-row  { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#888780; margin-top:0.5rem; flex-wrap:wrap; gap:8px; }
+  .btn         { font-size:12px; padding:5px 14px; border-radius:6px; border:0.5px solid #b4b2a9; background:transparent; color:#5F5E5A; cursor:pointer; }
+  .btn:hover   { background:#F1EFE8; }
+  .btn:disabled { opacity:0.4; cursor:default; }
+  .conn-badge  { font-size:12px; padding:4px 12px; border-radius:6px; font-weight:500; }
+  .conn-ok     { background:#EAF3DE; color:#27500A; }
+  .conn-fail   { background:#FCEBEB; color:#791F1F; }
+  .conn-wait   { background:#F1EFE8; color:#5F5E5A; }
+  .th-row      { display:flex; gap:16px; font-size:12px; color:#888780; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:0.5px solid #f1efe8; }
+  .th-item     { display:flex; align-items:center; gap:5px; }
+  .mini-dot    { width:8px; height:8px; border-radius:50%; }
+  .source-row  { font-size:11px; color:#b4b2a9; margin-top:10px; }
+  .spinner     { display:inline-block; width:11px; height:11px; border:1.5px solid #d3d1c7; border-top-color:#534AB7; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:3px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  a { color:#534AB7; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  @media(max-width:600px){ .ind-val{min-width:70px;font-size:12px;} .bar-wrap{width:60px;} .badge{display:none;} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>美国通胀风险监测仪表盘</h1>
+  <p class="subtitle">基于李光耀通胀担忧框架 · FRED实时数据 · 刷新自动更新</p>
+
+  <!-- 连接状态栏 -->
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:1.25rem; flex-wrap:wrap;">
+    <span style="font-size:13px; color:#888780;">本地代理状态：</span>
+    <span class="conn-badge conn-wait" id="conn-badge">检测中…</span>
+    <span style="font-size:12px; color:#b4b2a9;" id="conn-hint"></span>
+  </div>
+
+  <!-- 首次使用说明（连接成功后自动隐藏） -->
+  <div class="setup-box" id="setup-box">
+    <div class="setup-title">首次使用：启动本地数据服务（只需配置一次）</div>
+    <div class="setup-step">
+      <b>① 安装依赖</b>（终端运行一次）<br>
+      <code>pip install requests flask flask-cors</code>
+    </div>
+    <div class="setup-step" style="margin-top:10px;">
+      <b>② 设置FRED API Key</b>（<a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank">免费申请</a>）<br>
+      Mac/Linux：<code>export FRED_API_KEY=你的32位Key</code><br>
+      Windows：&nbsp;&nbsp;<code>set FRED_API_KEY=你的32位Key</code>
+    </div>
+    <div class="setup-step" style="margin-top:10px;">
+      <b>③ 启动代理服务</b>（与 index.html 同目录下）<br>
+      <code>python server.py</code>
+    </div>
+    <div class="setup-step" style="margin-top:10px;">
+      <b>④ 刷新本页面</b>，数据自动加载 ✓
+    </div>
+  </div>
+
+  <!-- 主面板 -->
+  <div id="main-panel" style="display:none;">
+
+    <div class="alert alert-gray" id="alert-box">
+      <div class="alert-title" id="alert-title"><span class="spinner"></span>正在拉取数据…</div>
+      <div class="alert-body"  id="alert-body">连接本地代理，向FRED请求最新指标。</div>
+    </div>
+
+    <div class="score-row">
+      <div class="score-big">
+        <div class="score-num" id="total-score" style="color:#888780;">—</div>
+        <div class="score-lbl">综合风险分 / 100</div>
+        <div style="margin-top:10px;">
+          <svg width="130" height="72" viewBox="0 0 130 72" aria-hidden="true">
+            <defs>
+              <linearGradient id="grd" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%"   stop-color="#639922"/>
+                <stop offset="40%"  stop-color="#BA7517"/>
+                <stop offset="70%"  stop-color="#E24B4A"/>
+                <stop offset="100%" stop-color="#A32D2D"/>
+              </linearGradient>
+            </defs>
+            <path d="M12,68 A53,53 0 0,1 118,68" fill="none" stroke="url(#grd)" stroke-width="9" stroke-linecap="round"/>
+            <line id="needle" x1="65" y1="68" x2="14" y2="65" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="65" cy="68" r="4" fill="#1a1a18"/>
+          </svg>
+        </div>
+      </div>
+      <div class="layer-scores">
+        <div class="layer-card"><div class="layer-name">货币层</div><div class="layer-val" id="l2-s" style="color:#888780;">—</div><div class="layer-st" id="l2-t" style="color:#888780;">载入中</div></div>
+        <div class="layer-card"><div class="layer-name">结构层</div><div class="layer-val" id="l1-s" style="color:#888780;">—</div><div class="layer-st" id="l1-t" style="color:#888780;">载入中</div></div>
+        <div class="layer-card"><div class="layer-name">市场层</div><div class="layer-val" id="l3-s" style="color:#888780;">—</div><div class="layer-st" id="l3-t" style="color:#888780;">载入中</div></div>
+        <div class="layer-card"><div class="layer-name">地缘层</div><div class="layer-val" id="l4-s" style="color:#888780;">38</div><div class="layer-st" id="l4-t" style="color:#888780;">手动评估</div></div>
+      </div>
+    </div>
+
+    <div class="section-label">货币层 — 核心触发指标</div>
+    <div class="indicators">
+      <div class="ind-row" id="row-t5yie"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">5年TIPS盈亏平衡通胀预期</div><div class="ind-meta">警戒线 3.0% · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-t5yie" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-t5yie"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-t5yie">—</span></div>
+      <div class="ind-row" id="row-t10yie"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">10年TIPS盈亏平衡通胀预期</div><div class="ind-meta">警戒线 2.8% · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-t10yie" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-t10yie"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-t10yie">—</span></div>
+      <div class="ind-row" id="row-dfii10"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">10年期实际利率（TIPS）</div><div class="ind-meta">负值 = 债务通胀化信号 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-dfii10" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-dfii10"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-dfii10">—</span></div>
+      <div class="ind-row" id="row-walcl"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">美联储总资产（资产负债表）</div><div class="ind-meta">扩表 = 核心红线信号 · 每周</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-walcl" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-walcl"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-walcl">—</span></div>
+    </div>
+
+    <div class="section-label">结构层指标</div>
+    <div class="indicators">
+      <div class="ind-row" id="row-m2yoy"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">M2货币供应量同比增速</div><div class="ind-meta">正常 3–5% · 警戒线 8% · 每月</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-m2yoy" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-m2yoy"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-m2yoy">—</span></div>
+      <div class="ind-row" id="row-deficit"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">联邦财政月度盈余 / 赤字</div><div class="ind-meta">持续高赤字为压力信号 · 每月</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-deficit" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-deficit"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-deficit">—</span></div>
+      <div class="ind-row" id="row-usd"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">美元贸易加权指数（近60期趋势）</div><div class="ind-meta">高利率期持续走弱 = 市场抛售信号 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-usd" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-usd"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-usd">—</span></div>
+    </div>
+
+    <div style="background:#fff;border:0.5px solid #d3d1c7;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;font-size:13px;color:#444441;line-height:1.7;">
+        <div><span style="color:#639922;font-weight:500;">绿色 0–34：</span>通胀预期温和，美联储缩表，实际利率为正。</div>
+        <div><span style="color:#BA7517;font-weight:500;">橙色 35–59：</span>压力累积，核心红线未触发，需持续关注。</div>
+        <div><span style="color:#E24B4A;font-weight:500;">红色 60–79：</span>恶性通胀风险上升，李光耀担忧链条正在形成。</div>
+        <div><span style="color:#A32D2D;font-weight:500;">极端 80+：</span>美联储货币纪律失守，美元信用承压。</div>
+      </div>
+      <div class="th-row">
+        <div class="th-item"><div class="mini-dot" style="background:#639922;"></div>TIPS 5yr &lt;2.5%</div>
+        <div class="th-item"><div class="mini-dot" style="background:#BA7517;"></div>TIPS 5yr 2.5–3%</div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>TIPS 5yr &gt;3%</div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>实际利率为负</div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>M2同比 &gt;8%</div>
+      </div>
+    </div>
+
+    <div class="update-row">
+      <span id="last-updated">上次更新：—</span>
+      <button class="btn" id="refresh-btn" onclick="loadData()">↻ 刷新数据</button>
+    </div>
+    <div class="source-row">数据来源：<a href="https://fred.stlouisfed.org" target="_blank">FRED · 美联储圣路易斯分行</a> · 通过本地 server.py 代理访问，API Key保存在你的本地环境变量中，不会离开本机。</div>
+
+  </div><!-- end main-panel -->
+</div>
+
+<script>
+const LOCAL = 'http://localhost:5100';
+
+function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
+
+function colorFor(score) {
+  if (score < 35) return { dot:'dot-green', badge:'badge-green', hex:'#639922', cls:'green' };
+  if (score < 60) return { dot:'dot-amber', badge:'badge-amber', hex:'#BA7517', cls:'amber' };
+  if (score < 80) return { dot:'dot-red',   badge:'badge-red',   hex:'#E24B4A', cls:'red'   };
+  return               { dot:'dot-red',   badge:'badge-red',   hex:'#A32D2D', cls:'red'   };
+}
+
+function setRow(id, display, score, badgeText) {
+  const c = colorFor(score);
+  const row = document.getElementById('row-' + id);
+  if (row) row.querySelector('.dot').className = 'dot ' + c.dot;
+  const v = document.getElementById('val-' + id);   if (v)  v.textContent = display;
+  const b = document.getElementById('bar-' + id);
+  if (b) { b.style.width = clamp(score,2,100)+'%'; b.style.background = c.hex; }
+  const bg = document.getElementById('bdg-' + id);
+  if (bg) { bg.textContent = badgeText; bg.className = 'badge ' + c.badge; }
+}
+
+function setLayer(pfx, score, label) {
+  const c = colorFor(score);
+  const s = document.getElementById(pfx+'-s'); if (s) { s.textContent = score; s.style.color = c.hex; }
+  const t = document.getElementById(pfx+'-t'); if (t) { t.textContent = label; t.style.color = c.hex; }
+}
+
+function updateNeedle(score) {
+  const angle = -180 + (clamp(score,0,100)/100)*180;
+  const rad = angle*Math.PI/180;
+  const x2 = Math.round(65 + 50*Math.cos(rad));
+  const y2 = Math.round(68 + 50*Math.sin(rad));
+  const n = document.getElementById('needle');
+  if (n) { n.setAttribute('x2', x2); n.setAttribute('y2', y2); }
+}
+
+function updateAlert(score) {
+  const box = document.getElementById('alert-box');
+  const title = document.getElementById('alert-title');
+  const body  = document.getElementById('alert-body');
+  box.className = 'alert';
+  if (score < 35) {
+    box.classList.add('alert-green');
+    title.textContent = '🟢 绿色区间：风险可控';
+    body.textContent  = 'TIPS通胀预期温和，M2增速正常，实际利率为正，美联储处于缩表通道。';
+  } else if (score < 60) {
+    box.classList.add('alert-amber');
+    title.textContent = '🟡 橙色预警区间：需密切关注';
+    body.textContent  = '部分指标偏高但核心红线未触发。重点追踪：TIPS 5年期是否突破3%，以及美联储是否在通胀未受控时被迫扩表。';
+  } else if (score < 80) {
+    box.classList.add('alert-red');
+    title.textContent = '🔴 红色区间：恶性通胀风险上升';
+    body.textContent  = '多项指标同步恶化，市场通胀预期明显抬升。李光耀2009年担忧的链条正在形成。';
+  } else {
+    box.classList.add('alert-red');
+    title.textContent = '🚨 极端危险：立即响应';
+    body.textContent  = '美联储货币纪律面临严峻考验，美元信用体系承压。建议检视资产配置，增加实物资产与非美元对冲。';
+  }
+}
+
+async function fred(seriesId, limit) {
+  const url = `${LOCAL}/fred?series_id=${seriesId}&limit=${limit}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const arr = await res.json();
+  if (arr.error) throw new Error(arr.error);
+  return arr.filter(o => o.value && o.value !== '.');
+}
+
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '更新中…'; }
+
+  const scores = {};
+
+  // T5YIE
+  try {
+    const d = await fred('T5YIE', 1);
+    const v = parseFloat(d[0].value);
+    const s = clamp(Math.round(((v-1.0)/2.5)*100), 0, 100);
+    setRow('t5yie', v.toFixed(2)+'%', s, v<2.5?'预期温和':v<3?'偏高关注':'突破警戒线');
+    scores.t5yie = s;
+  } catch { setRow('t5yie','—',50,'获取失败'); scores.t5yie=50; }
+
+  // T10YIE
+  try {
+    const d = await fred('T10YIE', 1);
+    const v = parseFloat(d[0].value);
+    const s = clamp(Math.round(((v-1.0)/2.3)*100), 0, 100);
+    setRow('t10yie', v.toFixed(2)+'%', s, v<2.3?'预期稳定':v<2.8?'温和上升':'高位预警');
+    scores.t10yie = s;
+  } catch { setRow('t10yie','—',50,'获取失败'); scores.t10yie=50; }
+
+  // DFII10
+  try {
+    const d = await fred('DFII10', 1);
+    const v = parseFloat(d[0].value);
+    const s = v>=1.5?15 : v>=0.5?30 : v>=0?50 : clamp(Math.round(60+Math.abs(v)*20),60,100);
+    setRow('dfii10', v.toFixed(2)+'%', s, v>=1?'利率健康':v>=0?'偏低':' 实际利率为负⚠');
+    scores.dfii10 = s;
+  } catch { setRow('dfii10','—',50,'获取失败'); scores.dfii10=50; }
+
+  // WALCL
+  try {
+    const d = await fred('WALCL', 3);
+    const cur = parseFloat(d[0].value);
+    const prv = parseFloat(d[d.length-1].value);
+    const chg = ((cur-prv)/prv)*100;
+    const s   = chg>0.5?72 : chg>0?48 : chg>-1?28 : 15;
+    setRow('walcl', (cur/1000000).toFixed(2)+'T', s, chg>0.5?'扩表中⚠':chg>0?'小幅扩表':'缩表中');
+    scores.walcl = s;
+  } catch { setRow('walcl','—',50,'获取失败'); scores.walcl=50; }
+
+  // M2SL — 同比
+  try {
+    const d   = await fred('M2SL', 13);
+    const cur  = parseFloat(d[0].value);
+    const yr   = parseFloat(d[Math.min(12,d.length-1)].value);
+    const yoy  = ((cur-yr)/yr)*100;
+    const s    = yoy<3?18 : yoy<5?28 : yoy<8?55 : clamp(Math.round(55+(yoy-8)*5),55,100);
+    setRow('m2yoy', yoy.toFixed(1)+'%', s, yoy<5?'增速正常':yoy<8?'增速偏高':'增速过快⚠');
+    scores.m2yoy = s;
+  } catch { setRow('m2yoy','—',50,'获取失败'); scores.m2yoy=50; }
+
+  // MTSDS133FMS — 月度财政
+  try {
+    const d = await fred('MTSDS133FMS', 1);
+    const v = parseFloat(d[0].value);
+    const s = v>0?10 : v>-100000?28 : v>-200000?52 : v>-350000?70 : 85;
+    const display = (v>=0?'+':'') + (v/1000).toFixed(0)+'B';
+    setRow('deficit', display, s, v>0?'当月盈余':Math.abs(v)<100000?'小额赤字':Math.abs(v)<300000?'较大赤字':'高额赤字⚠');
+    scores.deficit = s;
+  } catch { setRow('deficit','—',60,'获取失败'); scores.deficit=60; }
+
+  // DTWEXBGS — 美元指数趋势
+  try {
+    const d   = await fred('DTWEXBGS', 60);
+    const cur  = parseFloat(d[0].value);
+    const old  = parseFloat(d[d.length-1].value);
+    const chg  = ((cur-old)/old)*100;
+    const s    = chg>3?15 : chg>0?25 : chg>-3?45 : chg>-8?65 : 80;
+    setRow('usd', cur.toFixed(1), s, chg>2?'美元强势':chg>-2?'基本稳定':'美元走弱⚠');
+    scores.usd = s;
+  } catch { setRow('usd','—',40,'获取失败'); scores.usd=40; }
+
+  // 汇总各层
+  const l2 = Math.round(scores.t5yie*0.35 + scores.t10yie*0.25 + scores.dfii10*0.25 + scores.walcl*0.15);
+  const l1 = Math.round(scores.m2yoy*0.35 + scores.deficit*0.40 + scores.usd*0.25);
+  const l3 = Math.round(scores.t5yie*0.50 + scores.t10yie*0.30 + scores.dfii10*0.20);
+  const l4 = 38;
+
+  setLayer('l2', l2, l2<35?'货币可控':l2<60?'需关注':'货币压力大');
+  setLayer('l1', l1, l1<35?'结构稳定':l1<60?'压力累积':'结构恶化');
+  setLayer('l3', l3, l3<35?'市场平稳':l3<60?'预期抬升':'市场预警');
+
+  const total = Math.round(l2*0.35 + l1*0.35 + l3*0.20 + l4*0.10);
+  const tc = colorFor(total);
+  const ts = document.getElementById('total-score');
+  ts.textContent = total; ts.style.color = tc.hex;
+  updateNeedle(total);
+  updateAlert(total);
+
+  document.getElementById('last-updated').textContent = '上次更新：' + new Date().toLocaleString('zh-CN');
+  if (btn) { btn.disabled = false; btn.textContent = '↻ 刷新数据'; }
+}
+
+// 启动时先检测本地服务是否运行
+async function checkConnection() {
+  const badge = document.getElementById('conn-badge');
+  const hint  = document.getElementById('conn-hint');
+  try {
+    const res = await fetch(`${LOCAL}/health`, { signal: AbortSignal.timeout(3000) });
+    const data = await res.json();
+    if (data.ok && data.api_key_set) {
+      badge.textContent = '✓ 已连接';
+      badge.className = 'conn-badge conn-ok';
+      hint.textContent = 'server.py 运行中，API Key已加载';
+      document.getElementById('setup-box').style.display = 'none';
+      document.getElementById('main-panel').style.display = 'block';
+      loadData();
+    } else if (data.ok && !data.api_key_set) {
+      badge.textContent = '⚠ 未设置Key';
+      badge.className = 'conn-badge conn-fail';
+      hint.textContent = '服务已启动，但未检测到 FRED_API_KEY 环境变量，请参照下方步骤②设置后重启 server.py';
+    }
+  } catch {
+    badge.textContent = '✗ 未连接';
+    badge.className = 'conn-badge conn-fail';
+    hint.textContent = '请先按下方步骤启动 server.py，然后刷新本页';
+  }
+}
+
+checkConnection();
+</script>
+</body>
+</html>
