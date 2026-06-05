@@ -157,7 +157,7 @@
 
     <div class="section-label">市场层 — 实时对冲信号</div>
     <div class="indicators">
-      <div class="ind-row" id="row-gold"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">黄金价格（伦敦金午盘定价）</div><div class="ind-meta">强势美元期间仍涨 = 对冲美元体系风险 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-gold" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-gold"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-gold">—</span></div>
+      <div class="ind-row" id="row-gold"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">黄金期货价格（COMEX GC=F）</div><div class="ind-meta">强势美元期间仍涨 = 对冲美元体系风险 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-gold" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-gold"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-gold">—</span></div>
       <div class="ind-row" id="row-hyspread"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">高收益债信用利差（HY Spread）</div><div class="ind-meta">利差走阔 = 企业偿债能力恶化 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-hyspread" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-hyspread"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-hyspread">—</span></div>
       <div class="ind-row" id="row-btc"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">10年期国债拍卖认购倍数（Bid-to-Cover）</div><div class="ind-meta">警戒线 &lt;2.0 · 来源：美国财政部 · 每月约两次</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-btc" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-btc"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-btc">—</span></div>
     </div>
@@ -198,7 +198,7 @@
 </div>
 
 <script>
-const LOCAL = 'https://macrosignal-bfqt.onrender.com';
+const LOCAL = 'http://localhost:5100';
 
 function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
 
@@ -344,13 +344,15 @@ async function loadData() {
     scores.usd = s;
   } catch { setRow('usd','—',40,'获取失败'); scores.usd=40; }
 
-  // GOLDPMGBD228NLBM — 伦敦金午盘定价（USD/盎司），取60条看趋势
+  // 黄金期货 — Yahoo Finance via /gold 路由（COMEX GC=F）
   try {
-    const d   = await fred('GOLDPMGBD228NLBM', 60);
-    const cur  = parseFloat(d[0].value);
-    const old  = parseFloat(d[d.length-1].value);
+    const res = await fetch(`${LOCAL}/gold?limit=60`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const arr = await res.json();
+    if (arr.error) throw new Error(arr.error);
+    const cur  = parseFloat(arr[0].value);
+    const old  = parseFloat(arr[arr.length-1].value);
     const chg  = ((cur-old)/old)*100;
-    // 黄金上涨是对冲信号，涨幅越大风险越高
     const s    = chg<0?15 : chg<5?30 : chg<15?55 : chg<25?72 : 88;
     const lbl  = chg<0?'黄金回落' : chg<5?'温和上涨' : chg<15?'明显上涨⚠' : '强势上涨⚠';
     setRow('gold', '$'+Math.round(cur).toLocaleString(), s, lbl);
