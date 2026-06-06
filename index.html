@@ -445,7 +445,7 @@ async function checkConnection() {
   const badge = document.getElementById('conn-badge');
   const hint  = document.getElementById('conn-hint');
   try {
-    const res = await fetch(`${LOCAL}/health`, { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`${LOCAL}/health`, { signal: AbortSignal.timeout(6000) });
     const data = await res.json();
     if (data.ok && data.api_key_set) {
       badge.textContent = '✓ 已连接';
@@ -460,9 +460,9 @@ async function checkConnection() {
       hint.textContent = '服务已启动，但未检测到 FRED_API_KEY 环境变量，请参照下方步骤②设置后重启 server.py';
     }
   } catch {
-    badge.textContent = '✗ 未连接';
-    badge.className = 'conn-badge conn-fail';
-    hint.textContent = '请先按下方步骤启动 server.py，然后刷新本页';
+    badge.textContent = '⏳ 唤醒中…';
+    badge.className = 'conn-badge conn-wait';
+    hint.textContent = 'Render免费服务器冷启动中，请等待30-60秒后刷新页面';
   }
 }
 
