@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>美国通胀风险监测仪表盘</title>
+<title>U.S. Inflation Risk Dashboard</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f4f0; color: #1a1a18; min-height: 100vh; }
@@ -80,49 +80,38 @@
 <body>
 <div class="page">
 
-  <h1>美国通胀风险监测仪表盘</h1>
-  <p class="subtitle">基于李光耀通胀担忧框架 · FRED实时数据 · 刷新自动更新</p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+    <div>
+      <h1 data-en="U.S. Inflation Risk Dashboard" data-zh="美国通胀风险监测仪表盘">U.S. Inflation Risk Dashboard</h1>
+      <p class="subtitle" data-en="Latest FRED data · Refresh to update" data-zh="FRED最新数据 · 刷新自动更新">Latest FRED data · Refresh to update</p>
+    </div>
+    <button class="btn" id="language-btn" type="button" onclick="toggleLanguage()">Chinese</button>
+  </div>
 
   <!-- 连接状态栏 -->
   <div style="display:flex; align-items:center; gap:12px; margin-bottom:1.25rem; flex-wrap:wrap;">
-    <span style="font-size:13px; color:#888780;">本地代理状态：</span>
-    <span class="conn-badge conn-wait" id="conn-badge">检测中…</span>
+    <span style="font-size:13px; color:#888780;" data-en="Local service:" data-zh="本地代理状态：">Local service:</span>
+    <span class="conn-badge conn-wait" id="conn-badge">Checking…</span>
     <span style="font-size:12px; color:#b4b2a9;" id="conn-hint"></span>
   </div>
 
-  <!-- 首次使用说明（连接成功后自动隐藏） -->
+  <!-- 首次启动提示（连接成功后自动隐藏） -->
   <div class="setup-box" id="setup-box">
-    <div class="setup-title">首次使用：启动本地数据服务（只需配置一次）</div>
-    <div class="setup-step">
-      <b>① 安装依赖</b>（终端运行一次）<br>
-      <code>pip install requests flask flask-cors</code>
-    </div>
-    <div class="setup-step" style="margin-top:10px;">
-      <b>② 设置FRED API Key</b>（<a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank">免费申请</a>）<br>
-      Mac/Linux：<code>export FRED_API_KEY=你的32位Key</code><br>
-      Windows：&nbsp;&nbsp;<code>set FRED_API_KEY=你的32位Key</code>
-    </div>
-    <div class="setup-step" style="margin-top:10px;">
-      <b>③ 启动代理服务</b>（与 index.html 同目录下）<br>
-      <code>python server.py</code>
-    </div>
-    <div class="setup-step" style="margin-top:10px;">
-      <b>④ 刷新本页面</b>，数据自动加载 ✓
-    </div>
+    <div class="setup-step">The first launch may take a moment. If no data appears, wait one minute and refresh the page.</div>
   </div>
 
   <!-- 主面板 -->
   <div id="main-panel" style="display:none;">
 
     <div class="alert alert-gray" id="alert-box">
-      <div class="alert-title" id="alert-title"><span class="spinner"></span>正在拉取数据…</div>
-      <div class="alert-body"  id="alert-body">连接本地代理，向FRED请求最新指标。</div>
+      <div class="alert-title" id="alert-title"><span class="spinner"></span>Loading data…</div>
+      <div class="alert-body"  id="alert-body">Connecting to the local service and requesting the latest FRED data.</div>
     </div>
 
     <div class="score-row">
       <div class="score-big">
         <div class="score-num" id="total-score" style="color:#888780;">—</div>
-        <div class="score-lbl">综合风险分 / 100</div>
+        <div class="score-lbl" data-en="Overall risk score / 100" data-zh="综合风险分 / 100">Overall risk score / 100</div>
         <div style="margin-top:10px;">
           <svg width="130" height="72" viewBox="0 0 130 72" aria-hidden="true">
             <defs>
@@ -140,76 +129,89 @@
         </div>
       </div>
       <div class="layer-scores">
-        <div class="layer-card"><div class="layer-name">货币层</div><div class="layer-val" id="l2-s" style="color:#888780;">—</div><div class="layer-st" id="l2-t" style="color:#888780;">载入中</div></div>
-        <div class="layer-card"><div class="layer-name">结构层</div><div class="layer-val" id="l1-s" style="color:#888780;">—</div><div class="layer-st" id="l1-t" style="color:#888780;">载入中</div></div>
-        <div class="layer-card"><div class="layer-name">市场层</div><div class="layer-val" id="l3-s" style="color:#888780;">—</div><div class="layer-st" id="l3-t" style="color:#888780;">载入中</div></div>
-        <div class="layer-card"><div class="layer-name">地缘层</div><div class="layer-val" id="l4-s" style="color:#b4b2a9;">—</div><div class="layer-st" id="l4-t" style="color:#b4b2a9;">未纳入计算</div></div>
+        <div class="layer-card"><div class="layer-name" data-en="Monetary" data-zh="货币层">Monetary</div><div class="layer-val" id="l2-s" style="color:#888780;">—</div><div class="layer-st" id="l2-t" style="color:#888780;">Loading</div></div>
+        <div class="layer-card"><div class="layer-name" data-en="Structural" data-zh="结构层">Structural</div><div class="layer-val" id="l1-s" style="color:#888780;">—</div><div class="layer-st" id="l1-t" style="color:#888780;">Loading</div></div>
+        <div class="layer-card"><div class="layer-name" data-en="Market" data-zh="市场层">Market</div><div class="layer-val" id="l3-s" style="color:#888780;">—</div><div class="layer-st" id="l3-t" style="color:#888780;">Loading</div></div>
+        <div class="layer-card"><div class="layer-name" data-en="Geopolitical" data-zh="地缘层">Geopolitical</div><div class="layer-val" id="l4-s" style="color:#888780;">38</div><div class="layer-st" id="l4-t" style="color:#888780;" data-en="Manual assessment" data-zh="手动评估">Manual assessment</div></div>
       </div>
     </div>
 
-    <div class="section-label">货币层 — 核心触发指标</div>
+    <div class="section-label" data-en="Monetary — Core triggers" data-zh="货币层 — 核心触发指标">Monetary — Core triggers</div>
     <div class="indicators">
-      <div class="ind-row" id="row-t5yie"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">5年TIPS盈亏平衡通胀预期</div><div class="ind-meta">警戒线 3.0% · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-t5yie" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-t5yie"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-t5yie">—</span></div>
-      <div class="ind-row" id="row-t10yie"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">10年TIPS盈亏平衡通胀预期</div><div class="ind-meta">警戒线 2.8% · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-t10yie" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-t10yie"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-t10yie">—</span></div>
-      <div class="ind-row" id="row-dfii10"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">10年期实际利率（TIPS）</div><div class="ind-meta">负值 = 债务通胀化信号 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-dfii10" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-dfii10"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-dfii10">—</span></div>
-      <div class="ind-row" id="row-walcl"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">美联储总资产（资产负债表）</div><div class="ind-meta">扩表 = 核心红线信号 · 每周</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-walcl" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-walcl"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-walcl">—</span></div>
+      <div class="ind-row" id="row-t5yie"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name" data-en="5-Year Breakeven Inflation Rate" data-zh="5年TIPS盈亏平衡通胀预期">5-Year Breakeven Inflation Rate</div><div class="ind-meta" data-en="Warning threshold 3.0% · Daily" data-zh="警戒线 3.0% · 每日">Warning threshold 3.0% · Daily</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-t5yie" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-t5yie"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-t5yie">—</span></div>
+      <div class="ind-row" id="row-t10yie"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name" data-en="10-Year Breakeven Inflation Rate" data-zh="10年TIPS盈亏平衡通胀预期">10-Year Breakeven Inflation Rate</div><div class="ind-meta" data-en="Warning threshold 2.8% · Daily" data-zh="警戒线 2.8% · 每日">Warning threshold 2.8% · Daily</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-t10yie" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-t10yie"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-t10yie">—</span></div>
+      <div class="ind-row" id="row-dfii10"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name" data-en="10-Year Real Interest Rate (TIPS)" data-zh="10年期实际利率（TIPS）">10-Year Real Interest Rate (TIPS)</div><div class="ind-meta" data-en="Negative = debt monetization signal · Daily" data-zh="负值 = 债务通胀化信号 · 每日">Negative = debt monetization signal · Daily</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-dfii10" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-dfii10"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-dfii10">—</span></div>
+      <div class="ind-row" id="row-walcl"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name" data-en="Federal Reserve Total Assets" data-zh="美联储总资产（资产负债表）">Federal Reserve Total Assets</div><div class="ind-meta" data-en="Balance-sheet expansion = core warning · Weekly" data-zh="扩表 = 核心红线信号 · 每周">Balance-sheet expansion = core warning · Weekly</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-walcl" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-walcl"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-walcl">—</span></div>
     </div>
 
-    <div class="section-label">市场层 — 实时对冲信号</div>
+    <div class="section-label" data-en="Structural indicators" data-zh="结构层指标">Structural indicators</div>
     <div class="indicators">
-      <div class="ind-row" id="row-gold"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">黄金期货价格（COMEX GC=F）</div><div class="ind-meta">强势美元期间仍涨 = 对冲美元体系风险 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-gold" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-gold"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-gold">—</span></div>
-      <div class="ind-row" id="row-hyspread"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">高收益债信用利差（HY Spread）</div><div class="ind-meta">利差走阔 = 企业偿债能力恶化 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-hyspread" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-hyspread"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-hyspread">—</span></div>
-      <div class="ind-row" id="row-btc"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">10年期国债拍卖认购倍数（Bid-to-Cover）</div><div class="ind-meta">警戒线 &lt;2.0 · 来源：美国财政部 · 每月约两次</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-btc" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-btc"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-btc">—</span></div>
-    </div>
-
-    <div class="section-label">结构层指标</div>
-    <div class="indicators">
-      <div class="ind-row" id="row-m2yoy"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">M2货币供应量同比增速</div><div class="ind-meta">正常 3–5% · 警戒线 8% · 每月</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-m2yoy" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-m2yoy"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-m2yoy">—</span></div>
-      <div class="ind-row" id="row-deficit"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">联邦财政月度盈余 / 赤字</div><div class="ind-meta">持续高赤字为压力信号 · 每月</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-deficit" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-deficit"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-deficit">—</span></div>
-      <div class="ind-row" id="row-usd"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name">美元贸易加权指数（近60期趋势）</div><div class="ind-meta">高利率期持续走弱 = 市场抛售信号 · 每日</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-usd" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-usd"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-usd">—</span></div>
+      <div class="ind-row" id="row-m2yoy"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name" data-en="M2 Money Supply YoY Growth" data-zh="M2货币供应量同比增速">M2 Money Supply YoY Growth</div><div class="ind-meta" data-en="Normal 3–5% · Warning threshold 8% · Monthly" data-zh="正常 3–5% · 警戒线 8% · 每月">Normal 3–5% · Warning threshold 8% · Monthly</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-m2yoy" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-m2yoy"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-m2yoy">—</span></div>
+      <div class="ind-row" id="row-deficit"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name" data-en="Monthly Federal Surplus / Deficit" data-zh="联邦财政月度盈余 / 赤字">Monthly Federal Surplus / Deficit</div><div class="ind-meta" data-en="Persistent large deficits signal pressure · Monthly" data-zh="持续高赤字为压力信号 · 每月">Persistent large deficits signal pressure · Monthly</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-deficit" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-deficit"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-deficit">—</span></div>
+      <div class="ind-row" id="row-usd"><div class="dot dot-gray"></div><div class="ind-info"><div class="ind-name" data-en="Trade-Weighted U.S. Dollar Index (60-period trend)" data-zh="美元贸易加权指数（近60期趋势）">Trade-Weighted U.S. Dollar Index (60-period trend)</div><div class="ind-meta" data-en="Sustained weakness during high rates = selling pressure · Daily" data-zh="高利率期持续走弱 = 市场抛售信号 · 每日">Sustained weakness during high rates = selling pressure · Daily</div></div><div class="bar-wrap"><div class="bar-fill" id="bar-usd" style="width:2%;background:#b4b2a9;"></div></div><div class="ind-val" id="val-usd"><span class="spinner"></span></div><span class="badge badge-gray" id="bdg-usd">—</span></div>
     </div>
 
     <div style="background:#fff;border:0.5px solid #d3d1c7;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;font-size:13px;color:#444441;line-height:1.7;">
-        <div><span style="color:#639922;font-weight:500;">绿色 0–34：</span>通胀预期温和，美联储缩表，实际利率为正。</div>
-        <div><span style="color:#BA7517;font-weight:500;">橙色 35–59：</span>压力累积，核心红线未触发，需持续关注。</div>
-        <div><span style="color:#E24B4A;font-weight:500;">红色 60–79：</span>恶性通胀风险上升，李光耀担忧链条正在形成。</div>
-        <div><span style="color:#A32D2D;font-weight:500;">极端 80+：</span>美联储货币纪律失守，美元信用承压。</div>
+        <div><span style="color:#639922;font-weight:500;" data-en="Green 0–34: " data-zh="绿色 0–34：">Green 0–34: </span><span data-en="Inflation expectations are moderate, the Fed is shrinking its balance sheet, and real rates are positive." data-zh="通胀预期温和，美联储缩表，实际利率为正。">Inflation expectations are moderate, the Fed is shrinking its balance sheet, and real rates are positive.</span></div>
+        <div><span style="color:#BA7517;font-weight:500;" data-en="Amber 35–59: " data-zh="橙色 35–59：">Amber 35–59: </span><span data-en="Pressure is building, but core warning thresholds have not been triggered." data-zh="压力累积，核心红线未触发，需持续关注。">Pressure is building, but core warning thresholds have not been triggered.</span></div>
+        <div><span style="color:#E24B4A;font-weight:500;" data-en="Red 60–79: " data-zh="红色 60–79：">Red 60–79: </span><span data-en="Severe inflation risk is rising as multiple warning signals align." data-zh="恶性通胀风险上升，多项预警信号正在形成。">Severe inflation risk is rising as multiple warning signals align.</span></div>
+        <div><span style="color:#A32D2D;font-weight:500;" data-en="Extreme 80+: " data-zh="极端 80+：">Extreme 80+: </span><span data-en="Federal Reserve monetary discipline and confidence in the U.S. dollar are under pressure." data-zh="美联储货币纪律失守，美元信用承压。">Federal Reserve monetary discipline and confidence in the U.S. dollar are under pressure.</span></div>
       </div>
       <div class="th-row">
-        <div class="th-item"><div class="mini-dot" style="background:#639922;"></div>TIPS 5yr &lt;2.5%</div>
-        <div class="th-item"><div class="mini-dot" style="background:#BA7517;"></div>TIPS 5yr 2.5–3%</div>
-        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>TIPS 5yr &gt;3%</div>
-        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>实际利率为负</div>
-        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>M2同比 &gt;8%</div>
-        <div class="th-item"><div class="mini-dot" style="background:#BA7517;"></div>黄金60期涨幅 &gt;15%</div>
-        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>HY利差 &gt;6%</div>
-        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div>国债认购倍数 &lt;2.0x</div>
+        <div class="th-item"><div class="mini-dot" style="background:#639922;"></div><span data-en="5Y breakeven &lt;2.5%" data-zh="TIPS 5年期 &lt;2.5%">5Y breakeven &lt;2.5%</span></div>
+        <div class="th-item"><div class="mini-dot" style="background:#BA7517;"></div><span data-en="5Y breakeven 2.5–3%" data-zh="TIPS 5年期 2.5–3%">5Y breakeven 2.5–3%</span></div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div><span data-en="5Y breakeven &gt;3%" data-zh="TIPS 5年期 &gt;3%">5Y breakeven &gt;3%</span></div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div><span data-en="Negative real rate" data-zh="实际利率为负">Negative real rate</span></div>
+        <div class="th-item"><div class="mini-dot" style="background:#E24B4A;"></div><span data-en="M2 YoY &gt;8%" data-zh="M2同比 &gt;8%">M2 YoY &gt;8%</span></div>
       </div>
     </div>
 
     <div class="update-row">
-      <span id="last-updated">上次更新：—</span>
-      <button class="btn" id="refresh-btn" onclick="loadData()">↻ 刷新数据</button>
+      <span id="last-updated">Last updated: —</span>
+      <button class="btn" id="refresh-btn" onclick="loadData()">↻ Refresh data</button>
     </div>
-
-    <div style="background:#F1EFE8;border:0.5px solid #D3D1C7;border-radius:12px;padding:1rem 1.5rem;margin-top:1rem;margin-bottom:0.5rem;">
-      <div style="font-size:12px;font-weight:500;color:#5F5E5A;margin-bottom:8px;">第四层：地缘政治触发指标（黑天鹅预警）— 未纳入自动计算</div>
-      <div style="font-size:12px;color:#888780;line-height:1.8;">
-        以下指标缺乏可靠的实时公开数据源，目前需手动跟踪：<br>
-        · <b>中国减持美债速度</b>：美国财政部TIC数据，每月更新，延迟约2个月<br>
-        · <b>人民币国际结算份额</b>：SWIFT月报，PDF格式，无结构化API<br>
-        · <b>石油非美元结算比例</b>：无公开实时数据源，依赖新闻追踪<br>
-        · <b>国债拍卖认购倍数</b>：已移入市场层，通过财政部API自动拉取
-      </div>
-    </div>
-    <div class="source-row">数据来源：<a href="https://fred.stlouisfed.org" target="_blank">FRED · 美联储圣路易斯分行</a> · 通过本地 server.py 代理访问，API Key保存在你的本地环境变量中，不会离开本机。</div>
+    <div class="source-row"><span data-en="Source: " data-zh="数据来源：">Source: </span><a href="https://fred.stlouisfed.org" target="_blank" data-en="FRED · Federal Reserve Bank of St. Louis" data-zh="FRED · 美联储圣路易斯分行">FRED · Federal Reserve Bank of St. Louis</a><span data-en=" · Accessed through the local server.py proxy. The API key is stored in your local environment and sent only to FRED." data-zh=" · 通过本地 server.py 代理访问。API Key保存在本地环境变量中，仅由代理发送给FRED。"> · Accessed through the local server.py proxy. The API key is stored in your local environment and sent only to FRED.</span></div>
 
   </div><!-- end main-panel -->
 </div>
 
 <script>
-const LOCAL = 'https://macrosignal-bfqt.onrender.com';
+const LOCAL = 'http://localhost:5100';
+let currentLanguage = 'en';
+let lastUpdatedAt = null;
+
+function setLocalizedText(element, english, chinese) {
+  if (!element) return;
+  element.dataset.en = english;
+  element.dataset.zh = chinese;
+  element.textContent = currentLanguage === 'en' ? english : chinese;
+}
+
+function updateLastUpdated() {
+  const element = document.getElementById('last-updated');
+  if (!lastUpdatedAt) {
+    setLocalizedText(element, 'Last updated: —', '上次更新：—');
+    return;
+  }
+  const englishTime = lastUpdatedAt.toLocaleString('en-US');
+  const chineseTime = lastUpdatedAt.toLocaleString('zh-CN');
+  setLocalizedText(element, `Last updated: ${englishTime}`, `上次更新：${chineseTime}`);
+}
+
+function applyLanguage() {
+  document.documentElement.lang = currentLanguage;
+  document.title = currentLanguage === 'en' ? 'U.S. Inflation Risk Dashboard' : '美国通胀风险监测仪表盘';
+  document.querySelectorAll('[data-en][data-zh]').forEach(element => {
+    element.textContent = element.dataset[currentLanguage];
+  });
+  document.getElementById('language-btn').textContent = currentLanguage === 'en' ? 'Chinese' : 'English';
+}
+
+function toggleLanguage() {
+  currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
+  applyLanguage();
+}
 
 function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
 
@@ -220,7 +222,7 @@ function colorFor(score) {
   return               { dot:'dot-red',   badge:'badge-red',   hex:'#A32D2D', cls:'red'   };
 }
 
-function setRow(id, display, score, badgeText) {
+function setRow(id, display, score, badgeEnglish, badgeChinese) {
   const c = colorFor(score);
   const row = document.getElementById('row-' + id);
   if (row) row.querySelector('.dot').className = 'dot ' + c.dot;
@@ -228,13 +230,13 @@ function setRow(id, display, score, badgeText) {
   const b = document.getElementById('bar-' + id);
   if (b) { b.style.width = clamp(score,2,100)+'%'; b.style.background = c.hex; }
   const bg = document.getElementById('bdg-' + id);
-  if (bg) { bg.textContent = badgeText; bg.className = 'badge ' + c.badge; }
+  if (bg) { setLocalizedText(bg, badgeEnglish, badgeChinese); bg.className = 'badge ' + c.badge; }
 }
 
-function setLayer(pfx, score, label) {
+function setLayer(pfx, score, englishLabel, chineseLabel) {
   const c = colorFor(score);
   const s = document.getElementById(pfx+'-s'); if (s) { s.textContent = score; s.style.color = c.hex; }
-  const t = document.getElementById(pfx+'-t'); if (t) { t.textContent = label; t.style.color = c.hex; }
+  const t = document.getElementById(pfx+'-t'); if (t) { setLocalizedText(t, englishLabel, chineseLabel); t.style.color = c.hex; }
 }
 
 function updateNeedle(score) {
@@ -253,20 +255,20 @@ function updateAlert(score) {
   box.className = 'alert';
   if (score < 35) {
     box.classList.add('alert-green');
-    title.textContent = '🟢 绿色区间：风险可控';
-    body.textContent  = 'TIPS通胀预期温和，M2增速正常，实际利率为正，美联储处于缩表通道。';
+    setLocalizedText(title, '🟢 Green zone: Risk is contained', '🟢 绿色区间：风险可控');
+    setLocalizedText(body, 'Inflation expectations are moderate, M2 growth is normal, real rates are positive, and the Fed is shrinking its balance sheet.', 'TIPS通胀预期温和，M2增速正常，实际利率为正，美联储处于缩表通道。');
   } else if (score < 60) {
     box.classList.add('alert-amber');
-    title.textContent = '🟡 橙色预警区间：需密切关注';
-    body.textContent  = '部分指标偏高但核心红线未触发。重点追踪：TIPS 5年期是否突破3%，以及美联储是否在通胀未受控时被迫扩表。';
+    setLocalizedText(title, '🟡 Amber zone: Close monitoring needed', '🟡 橙色预警区间：需密切关注');
+    setLocalizedText(body, 'Some indicators are elevated, but core warning thresholds have not been triggered. Watch whether the 5-year breakeven rate exceeds 3% and whether the Fed expands its balance sheet before inflation is contained.', '部分指标偏高但核心红线未触发。重点追踪：TIPS 5年期是否突破3%，以及美联储是否在通胀未受控时被迫扩表。');
   } else if (score < 80) {
     box.classList.add('alert-red');
-    title.textContent = '🔴 红色区间：恶性通胀风险上升';
-    body.textContent  = '多项指标同步恶化，市场通胀预期明显抬升。李光耀2009年担忧的链条正在形成。';
+    setLocalizedText(title, '🔴 Red zone: Severe inflation risk is rising', '🔴 红色区间：恶性通胀风险上升');
+    setLocalizedText(body, 'Multiple indicators are deteriorating together, and market inflation expectations are rising materially.', '多项指标同步恶化，市场通胀预期明显抬升。');
   } else {
     box.classList.add('alert-red');
-    title.textContent = '🚨 极端危险：立即响应';
-    body.textContent  = '美联储货币纪律面临严峻考验，美元信用体系承压。建议检视资产配置，增加实物资产与非美元对冲。';
+    setLocalizedText(title, '🚨 Extreme risk: Immediate attention required', '🚨 极端危险：立即响应');
+    setLocalizedText(body, 'Federal Reserve monetary discipline and confidence in the U.S. dollar are under severe pressure. Review portfolio exposure and risk controls.', '美联储货币纪律面临严峻考验，美元信用体系承压。建议检视资产配置与风险控制。');
   }
 }
 
@@ -281,7 +283,7 @@ async function fred(seriesId, limit) {
 
 async function loadData() {
   const btn = document.getElementById('refresh-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '更新中…'; }
+  if (btn) { btn.disabled = true; setLocalizedText(btn, 'Updating…', '更新中…'); }
 
   const scores = {};
 
@@ -290,27 +292,27 @@ async function loadData() {
     const d = await fred('T5YIE', 1);
     const v = parseFloat(d[0].value);
     const s = clamp(Math.round(((v-1.0)/2.5)*100), 0, 100);
-    setRow('t5yie', v.toFixed(2)+'%', s, v<2.5?'预期温和':v<3?'偏高关注':'突破警戒线');
+    setRow('t5yie', v.toFixed(2)+'%', s, v<2.5?'Moderate':v<3?'Elevated':'Above threshold', v<2.5?'预期温和':v<3?'偏高关注':'突破警戒线');
     scores.t5yie = s;
-  } catch { setRow('t5yie','—',50,'获取失败'); scores.t5yie=50; }
+  } catch { setRow('t5yie','—',50,'Unavailable','获取失败'); scores.t5yie=50; }
 
   // T10YIE
   try {
     const d = await fred('T10YIE', 1);
     const v = parseFloat(d[0].value);
     const s = clamp(Math.round(((v-1.0)/2.3)*100), 0, 100);
-    setRow('t10yie', v.toFixed(2)+'%', s, v<2.3?'预期稳定':v<2.8?'温和上升':'高位预警');
+    setRow('t10yie', v.toFixed(2)+'%', s, v<2.3?'Stable':v<2.8?'Rising moderately':'High warning', v<2.3?'预期稳定':v<2.8?'温和上升':'高位预警');
     scores.t10yie = s;
-  } catch { setRow('t10yie','—',50,'获取失败'); scores.t10yie=50; }
+  } catch { setRow('t10yie','—',50,'Unavailable','获取失败'); scores.t10yie=50; }
 
   // DFII10
   try {
     const d = await fred('DFII10', 1);
     const v = parseFloat(d[0].value);
     const s = v>=1.5?15 : v>=0.5?30 : v>=0?50 : clamp(Math.round(60+Math.abs(v)*20),60,100);
-    setRow('dfii10', v.toFixed(2)+'%', s, v>=1?'利率健康':v>=0?'偏低':' 实际利率为负⚠');
+    setRow('dfii10', v.toFixed(2)+'%', s, v>=1?'Healthy':v>=0?'Low':'Negative real rate ⚠', v>=1?'利率健康':v>=0?'偏低':'实际利率为负 ⚠');
     scores.dfii10 = s;
-  } catch { setRow('dfii10','—',50,'获取失败'); scores.dfii10=50; }
+  } catch { setRow('dfii10','—',50,'Unavailable','获取失败'); scores.dfii10=50; }
 
   // WALCL
   try {
@@ -319,9 +321,9 @@ async function loadData() {
     const prv = parseFloat(d[d.length-1].value);
     const chg = ((cur-prv)/prv)*100;
     const s   = chg>0.5?72 : chg>0?48 : chg>-1?28 : 15;
-    setRow('walcl', (cur/1000000).toFixed(2)+'T', s, chg>0.5?'扩表中⚠':chg>0?'小幅扩表':'缩表中');
+    setRow('walcl', (cur/1000000).toFixed(2)+'T', s, chg>0.5?'Expanding ⚠':chg>0?'Slight expansion':'Contracting', chg>0.5?'扩表中 ⚠':chg>0?'小幅扩表':'缩表中');
     scores.walcl = s;
-  } catch { setRow('walcl','—',50,'获取失败'); scores.walcl=50; }
+  } catch { setRow('walcl','—',50,'Unavailable','获取失败'); scores.walcl=50; }
 
   // M2SL — 同比
   try {
@@ -330,9 +332,9 @@ async function loadData() {
     const yr   = parseFloat(d[Math.min(12,d.length-1)].value);
     const yoy  = ((cur-yr)/yr)*100;
     const s    = yoy<3?18 : yoy<5?28 : yoy<8?55 : clamp(Math.round(55+(yoy-8)*5),55,100);
-    setRow('m2yoy', yoy.toFixed(1)+'%', s, yoy<5?'增速正常':yoy<8?'增速偏高':'增速过快⚠');
+    setRow('m2yoy', yoy.toFixed(1)+'%', s, yoy<5?'Normal growth':yoy<8?'Elevated growth':'Rapid growth ⚠', yoy<5?'增速正常':yoy<8?'增速偏高':'增速过快 ⚠');
     scores.m2yoy = s;
-  } catch { setRow('m2yoy','—',50,'获取失败'); scores.m2yoy=50; }
+  } catch { setRow('m2yoy','—',50,'Unavailable','获取失败'); scores.m2yoy=50; }
 
   // MTSDS133FMS — 月度财政
   try {
@@ -340,9 +342,9 @@ async function loadData() {
     const v = parseFloat(d[0].value);
     const s = v>0?10 : v>-100000?28 : v>-200000?52 : v>-350000?70 : 85;
     const display = (v>=0?'+':'') + (v/1000).toFixed(0)+'B';
-    setRow('deficit', display, s, v>0?'当月盈余':Math.abs(v)<100000?'小额赤字':Math.abs(v)<300000?'较大赤字':'高额赤字⚠');
+    setRow('deficit', display, s, v>0?'Monthly surplus':Math.abs(v)<100000?'Small deficit':Math.abs(v)<300000?'Large deficit':'Very large deficit ⚠', v>0?'当月盈余':Math.abs(v)<100000?'小额赤字':Math.abs(v)<300000?'较大赤字':'高额赤字 ⚠');
     scores.deficit = s;
-  } catch { setRow('deficit','—',60,'获取失败'); scores.deficit=60; }
+  } catch { setRow('deficit','—',60,'Unavailable','获取失败'); scores.deficit=60; }
 
   // DTWEXBGS — 美元指数趋势
   try {
@@ -351,93 +353,30 @@ async function loadData() {
     const old  = parseFloat(d[d.length-1].value);
     const chg  = ((cur-old)/old)*100;
     const s    = chg>3?15 : chg>0?25 : chg>-3?45 : chg>-8?65 : 80;
-    setRow('usd', cur.toFixed(1), s, chg>2?'美元强势':chg>-2?'基本稳定':'美元走弱⚠');
+    setRow('usd', cur.toFixed(1), s, chg>2?'Dollar strength':chg>-2?'Broadly stable':'Dollar weakness ⚠', chg>2?'美元强势':chg>-2?'基本稳定':'美元走弱 ⚠');
     scores.usd = s;
-  } catch { setRow('usd','—',40,'获取失败'); scores.usd=40; }
-
-  // 黄金期货 — Yahoo Finance via /gold 路由（COMEX GC=F）
-  try {
-    const res = await fetch(`${LOCAL}/gold?limit=60`);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const arr = await res.json();
-    if (arr.error) throw new Error(arr.error);
-    const cur  = parseFloat(arr[0].value);
-    const old  = parseFloat(arr[arr.length-1].value);
-    const chg  = ((cur-old)/old)*100;
-    const s    = chg<0?15 : chg<5?30 : chg<15?55 : chg<25?72 : 88;
-    const lbl  = chg<0?'黄金回落' : chg<5?'温和上涨' : chg<15?'明显上涨⚠' : '强势上涨⚠';
-    setRow('gold', '$'+Math.round(cur).toLocaleString(), s, lbl);
-    scores.gold = s;
-  } catch { setRow('gold','—',40,'获取失败'); scores.gold=40; }
-
-  // BAMLH0A0HYM2 — 美银美林高收益债利差（%），取60条
-  try {
-    const d  = await fred('BAMLH0A0HYM2', 60);
-    const cur = parseFloat(d[0].value);
-    const s   = cur<3?15 : cur<4?28 : cur<5?50 : cur<7?70 : 88;
-    const lbl = cur<4?'利差正常' : cur<5?'利差偏高' : cur<7?'利差预警⚠' : '利差危险⚠';
-    setRow('hyspread', cur.toFixed(2)+'%', s, lbl);
-    scores.hyspread = s;
-  } catch { setRow('hyspread','—',40,'获取失败'); scores.hyspread=40; }
-
-  // 国债拍卖认购倍数 — 来自财政部API
-  try {
-    const res = await fetch(`${LOCAL}/treasury/btc?limit=6`);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const arr = await res.json();
-    if (arr.error) throw new Error(arr.error);
-
-    const latest = arr[0];
-    const btcVal = latest.btc;
-
-    // 计算近6场平均值，判断趋势
-    const avg = arr.reduce((sum, x) => sum + x.btc, 0) / arr.length;
-    const trend = btcVal - avg;
-
-    // 评分：认购倍数越低风险越高
-    // 正常区间 2.3–2.8，警戒线 2.0，危险线 1.8
-    const s = btcVal >= 2.5 ? 15
-            : btcVal >= 2.2 ? 30
-            : btcVal >= 2.0 ? 52
-            : btcVal >= 1.8 ? 72
-            : 88;
-
-    const trendStr = trend >= 0.05 ? '↑需求改善'
-                   : trend <= -0.05 ? '↓需求走弱⚠'
-                   : '→需求稳定';
-
-    const lbl = btcVal >= 2.3 ? '需求健康'
-              : btcVal >= 2.0 ? '需求偏弱'
-              : '需求预警⚠';
-
-    setRow('btc',
-      `${btcVal.toFixed(2)}x（均值${avg.toFixed(2)}x）`,
-      s,
-      lbl + ' ' + trendStr
-    );
-    scores.btc = s;
-  } catch { setRow('btc','—',45,'获取失败'); scores.btc=45; }
+  } catch { setRow('usd','—',40,'Unavailable','获取失败'); scores.usd=40; }
 
   // 汇总各层
-  // 权重：货币层40% + 结构层35% + 市场层25%
-  // 地缘层已从计算中移除（无可靠实时数据源），保留为手动注释
   const l2 = Math.round(scores.t5yie*0.35 + scores.t10yie*0.25 + scores.dfii10*0.25 + scores.walcl*0.15);
   const l1 = Math.round(scores.m2yoy*0.35 + scores.deficit*0.40 + scores.usd*0.25);
-  const l3 = Math.round(scores.gold*0.40 + scores.hyspread*0.30 + scores.btc*0.30);
+  const l3 = Math.round(scores.t5yie*0.50 + scores.t10yie*0.30 + scores.dfii10*0.20);
+  const l4 = 38;
 
-  setLayer('l2', l2, l2<35?'货币可控':l2<60?'需关注':'货币压力大');
-  setLayer('l1', l1, l1<35?'结构稳定':l1<60?'压力累积':'结构恶化');
-  setLayer('l3', l3, l3<35?'市场平稳':l3<60?'预期抬升':'市场预警');
+  setLayer('l2', l2, l2<35?'Contained':l2<60?'Watch closely':'High pressure', l2<35?'货币可控':l2<60?'需关注':'货币压力大');
+  setLayer('l1', l1, l1<35?'Stable':l1<60?'Pressure building':'Deteriorating', l1<35?'结构稳定':l1<60?'压力累积':'结构恶化');
+  setLayer('l3', l3, l3<35?'Calm':l3<60?'Expectations rising':'Market warning', l3<35?'市场平稳':l3<60?'预期抬升':'市场预警');
 
-  const total = Math.round(l2*0.40 + l1*0.35 + l3*0.25);
+  const total = Math.round(l2*0.35 + l1*0.35 + l3*0.20 + l4*0.10);
   const tc = colorFor(total);
   const ts = document.getElementById('total-score');
   ts.textContent = total; ts.style.color = tc.hex;
   updateNeedle(total);
   updateAlert(total);
 
-  document.getElementById('last-updated').textContent = '上次更新：' + new Date().toLocaleString('zh-CN');
-  if (btn) { btn.disabled = false; btn.textContent = '↻ 刷新数据'; }
+  lastUpdatedAt = new Date();
+  updateLastUpdated();
+  if (btn) { btn.disabled = false; setLocalizedText(btn, '↻ Refresh data', '↻ 刷新数据'); }
 }
 
 // 启动时先检测本地服务是否运行
@@ -445,27 +384,28 @@ async function checkConnection() {
   const badge = document.getElementById('conn-badge');
   const hint  = document.getElementById('conn-hint');
   try {
-    const res = await fetch(`${LOCAL}/health`, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(`${LOCAL}/health`, { signal: AbortSignal.timeout(3000) });
     const data = await res.json();
     if (data.ok && data.api_key_set) {
-      badge.textContent = '✓ 已连接';
+      setLocalizedText(badge, '✓ Connected', '✓ 已连接');
       badge.className = 'conn-badge conn-ok';
-      hint.textContent = 'server.py 运行中，API Key已加载';
+      setLocalizedText(hint, 'server.py is running and the API key is loaded', 'server.py 运行中，API Key已加载');
       document.getElementById('setup-box').style.display = 'none';
       document.getElementById('main-panel').style.display = 'block';
       loadData();
     } else if (data.ok && !data.api_key_set) {
-      badge.textContent = '⚠ 未设置Key';
+      setLocalizedText(badge, '⚠ API key missing', '⚠ 未设置Key');
       badge.className = 'conn-badge conn-fail';
-      hint.textContent = '服务已启动，但未检测到 FRED_API_KEY 环境变量，请参照下方步骤②设置后重启 server.py';
+      setLocalizedText(hint, 'The service is running, but FRED_API_KEY is not set. Add it to the environment and restart server.py.', '服务已启动，但未检测到 FRED_API_KEY 环境变量。设置后请重启 server.py。');
     }
   } catch {
-    badge.textContent = '⏳ 唤醒中…';
-    badge.className = 'conn-badge conn-wait';
-    hint.textContent = 'Render免费服务器冷启动中，请等待30-60秒后刷新页面';
+    setLocalizedText(badge, '✗ Not connected', '✗ 未连接');
+    badge.className = 'conn-badge conn-fail';
+    setLocalizedText(hint, 'Please wait one minute, then refresh the page if data has not loaded.', '首次启动请耐心等待；如无数据，请一分钟后刷新页面。');
   }
 }
 
+applyLanguage();
 checkConnection();
 </script>
 </body>
