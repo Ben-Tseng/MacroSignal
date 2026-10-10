@@ -132,7 +132,6 @@
         <div class="layer-card"><div class="layer-name" data-en="Monetary" data-zh="货币层">Monetary</div><div class="layer-val" id="l2-s" style="color:#888780;">—</div><div class="layer-st" id="l2-t" style="color:#888780;">Loading</div></div>
         <div class="layer-card"><div class="layer-name" data-en="Structural" data-zh="结构层">Structural</div><div class="layer-val" id="l1-s" style="color:#888780;">—</div><div class="layer-st" id="l1-t" style="color:#888780;">Loading</div></div>
         <div class="layer-card"><div class="layer-name" data-en="Market" data-zh="市场层">Market</div><div class="layer-val" id="l3-s" style="color:#888780;">—</div><div class="layer-st" id="l3-t" style="color:#888780;">Loading</div></div>
-        <div class="layer-card"><div class="layer-name" data-en="Geopolitical" data-zh="地缘层">Geopolitical</div><div class="layer-val" id="l4-s" style="color:#888780;">38</div><div class="layer-st" id="l4-t" style="color:#888780;" data-en="Manual assessment" data-zh="手动评估">Manual assessment</div></div>
       </div>
     </div>
 
@@ -361,13 +360,11 @@ async function loadData() {
   const l2 = Math.round(scores.t5yie*0.35 + scores.t10yie*0.25 + scores.dfii10*0.25 + scores.walcl*0.15);
   const l1 = Math.round(scores.m2yoy*0.35 + scores.deficit*0.40 + scores.usd*0.25);
   const l3 = Math.round(scores.t5yie*0.50 + scores.t10yie*0.30 + scores.dfii10*0.20);
-  const l4 = 38;
-
   setLayer('l2', l2, l2<35?'Contained':l2<60?'Watch closely':'High pressure', l2<35?'货币可控':l2<60?'需关注':'货币压力大');
   setLayer('l1', l1, l1<35?'Stable':l1<60?'Pressure building':'Deteriorating', l1<35?'结构稳定':l1<60?'压力累积':'结构恶化');
   setLayer('l3', l3, l3<35?'Calm':l3<60?'Expectations rising':'Market warning', l3<35?'市场平稳':l3<60?'预期抬升':'市场预警');
 
-  const total = Math.round(l2*0.35 + l1*0.35 + l3*0.20 + l4*0.10);
+  const total = Math.round(l2*0.39 + l1*0.39 + l3*0.22);
   const tc = colorFor(total);
   const ts = document.getElementById('total-score');
   ts.textContent = total; ts.style.color = tc.hex;
